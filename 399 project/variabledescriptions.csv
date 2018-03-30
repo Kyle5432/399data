@@ -1,0 +1,7 @@
+Full Variable Name,Model Variable Name,Source,Comments,Source
+Age-Adjusted Firearm Death Rates,agemurder,CDC Center for Health Statistics ,"Complete for all states, 2014",https://www.cdc.gov/nchs/pressroom/sosmap/firearm.htm
+Percentage of Households Owning Firearms,gunrate,Gun Ownership & Social Gun Culture,"Extrapolated as US doesn't have firearm registry, 2013",http://injuryprevention.bmj.com/content/injuryprev/early/2015/06/09/injuryprev-2015-041586.full.pdf?keytype=ref&ijkey=doj6vx0laFZMsQ2
+Poverty Rate by Household Income,poverty,United States Census Bureau,"Complete for all states, 2014",https://www.census.gov/content/dam/Census/library/publications/2015/demo/p60-252.pdf
+"Divorces per 1,000",divorce,CDC Center for Health Statistics ,"Indiana and Louisiana missing, 2011",https://www.cdc.gov/nchs/data/dvs/divorce_rates_90_95_99-11.pdf
+Percentage of Residents With Bachelors or Higher,educ,United States Census Bureau,"Complete for all states, 2014",https://factfinder.census.gov/faces/tableservices/jsf/pages/productview.xhtml?pid=ACS_15_5YR_S1501
+Average Gun Ownership of Neighbouring States,borderchainav,Self Created Index,Null entry for Haiwaii and Alaska,
