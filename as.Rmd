@@ -1,0 +1,265 @@
+---
+title             : "An Econometric Analysis of the Factors playing into gun violence within the United States"
+shorttitle        : "Gun Violence in the United States"
+
+author: 
+  - name          : "Kyle Vokes"
+    affiliation   : "1"
+    corresponding : yes    # Define only one corresponding author
+    address       : "Postal address"
+    email         : "kyle5432@gmail.com"
+
+affiliation:
+  - id            : "1"
+    institution   : "Macewan University"
+
+
+author_note: 
+
+  Note: The code for this project will not compile without the project data folder in the root of your C folder. It can be downloaded [here.](https://github.com/Kyle5432/399data)
+
+abstract: |
+  This study seeks to establish a casual relationship between gun ownership and gun crime, in a manner that can be extrapolated to overall levels of murder. The study found a strong correlation (P=0.01) between gun ownership levels and gun violence levels. Additionally; marraige rates, educational attainment, gun ownership levels in neighbouring states and poverty were also found to be significant predictors of overall level of gun crimes.
+  
+keywords          : "Econometrics, Gun Violence, Gun Ownership, Interstate Variance"
+
+bibliography      : ["r-references.bib"]
+
+figsintext        : yes
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+lineno            : yes
+mask              : yes
+
+class             : "man"
+output            : papaja::apa6_pdf
+---
+
+```{r load_packages, include = FALSE}
+library(readxl)
+library(devtools)
+library(papaja)
+library(xtable)
+library(knitr)
+library(broom)
+library(lmtest)
+library(pastecs)
+library(kableExtra)
+library(stats)
+library(printr)
+library(bookdown)
+library(rmarkdown)
+```
+
+```{r analysis_preferences}
+# Seed for random number generation
+set.seed(42)
+```
+
+
+  
+
+## Introduction
+
+  Violent crime within the United States is a very poignant issue at this point in time, and one that represents a ripe area for econometric study. Of key note, despite an environment which may very easily lead one to believe the contrary, gun crime within the United States has actually declined significantly over the last 40 years. This fact alone can help omit numerous claims often made by the media, such as blaming violent video games (these became prevalent right around the same time crime rates started dropping). This highlights socio-economic factors, as well as gun prevalence as a more likely cause. Within this study, it is sought to develop a model that explains the interstate variation in homicide, and explore the connection between firearm ownership rates and firearm homicide rates. It is also worth noting that overall murder rates and firearm murder rates are almost collinear, with an $R^2$ of 0.85 for a simple model regressing the former on the later. This means that whilst the firearm homicide rate is used as the dependent variable within this study, the results can be quite accurately extrapolated to overall murder rates as well.
+```{r, include = FALSE}
+library(readxl)
+paneldata <- read_excel("paneldata.xlsx")
+usa.ts <-ts(paneldata, start=1981, end=2016,
+            frequency=1)
+```
+
+```{r, include= TRUE}
+plot(usa.ts[,"rate"], ylab="Gun deaths per 100,000", main="US Gun death rates over time")
+```
+  
+
+
+## Literature Review
+  The topic of gun violence and murder has been a keystone topic within the United States for decades. Contrasted with developed countries of similar levels of economic development, the United States has a murder rate several times higher than average. Siegel, Ross, and King (2013) provides an excellent overview of the relationship between gun violence and gun ownership. Using panel data from 1981 to 2010, firearm ownership is found to be a strong indicator of gun homicide (incidence rate ratio=1.009). This study also suggests the usage of age-adjusted homicide rates over generic homicide rates, which proved crucial in finding an accurate predictor.
+  
+  Webster et. al. (2012) provides an excellent overview of current firearm laws across the United States, which proved invaluable in putting together binary variables to test the efficacy of various gun control measures. Along with this, the study provides a good oversight of the current climate surrounding gun ownership restrictions within the United States.
+  
+  Colonescu (2016) gave an excellent overview of all econometric methods relevant to the research performed. The diagnostic
+  
+  Moody (2002) provides a plausible explanation for a causal relationship between gun crime and gun ownership levels. Through a larger pool of available guns, the amount of people willing to sell there guns into the black market is almost certain to go up, dropping the resulting price of obtaining a weapon illegally. 
+  
+## Methodology & Data
+
+### Methodology
+
+  For this study, murder rates and gun ownership levels are hypothesized to have a positive correlation. In order to show this, we must show a statistically significant correlation between crime and gun ownership levels even when socioeconomic factors are properly controlled for. This would run contrary to the logic stated by the NRA and other guns-rights movements within the United States that an increased presence of guns serves to deter crime.
+  
+  Our methodology will consist of initially constructing a simple linear regression model with gun murder per capita as the dependent variable, and gun ownership per capita as the independent variable. From here, the regression model will be expanded to account for numerous socio-economic factors that may also explain the discrepancy in gun violence levels. Finally, regression diagnostics will be used to confirm the overall validity and robustness of these predictions.
+  
+```{r, include=FALSE}
+descriptive <- read_excel("descriptive.xlsx")
+```
+
+### Data
+  One of the key objectives when compiling the data set was to properly minimize omitted variable bias. Crime is a complex and multifaceted problem with many factors leading into it, so great care was taken to properly control for any relevant socio-economic factors, particularly those identified within the literature review. The data set includes the variable poverty, which is the percentage of population within a state living below the poverty line. The variable educ gives the number of people within a state who have attained at least a bachelors degree. The data for both of these variables came from the United States Census Bureau. Within the appendix is a chart detailing the nature, source and comments of all variables used.
+
+&nbsp;
+```{r}
+hs0<-read.table("descriptive.csv", sep=",", header=T)
+attach(hs0)
+scores <- cbind(gun, border, poverty, education, divorce)
+stat.desc(scores, basic=F)
+detach(hs0)
+```
+\begin{center}Table 1: Descriptive Statistics\end{center}
+
+  In addition to socio-economic factors, one also must consider the effects of availability of guns in neighboring states. If a state has extremely strict gun laws, but an individual can easily travel to a different state to circumvent these laws, this must be captured in the data. In order to do so, an index was created via the formula below. This gives a rough measure of the ease of circumventing local gun laws and restrictions.
+  
+ 
+\begin{center}
+$B^i=\frac{\sum G^{b}}{B}$ 
+\end{center} 
+
+ 
+ $G^{b}$ = Gun ownership of bordering states
+ \
+ B = Number of bordering states
+ 
+ &nbsp;
+ 
+  In order to conduct our multiple linear regression analysis, it must be ensured that the data meets the Gauss-Markov assumptions. The first assumption, the linearity of parametres, is met as the regression is in the form:
+    \begin{center}
+    $y=\beta _{0} +\beta _{2} x_{1}+ \beta_{2}x_{2} + ...+u$
+    \end{center} 
+    
+  The second assumption of random sampling is almost entirely met. The data used is almost entirely complete, aside from extrapolated marriage data for California, and the border index having two. For the third assumption to be met, we cannot have complete collinearity and no variable may be constant.Table 3 confirms these assumptions are met.  Finally, the assumption of homoscedasticity is confirmed through the Breusch-Pagan test.
+\
+\begin{center}
+Table 2: Correlation Matrix
+\end{center} 
+\
+```{r}
+mcor<-round(cor(descriptive),2)
+upper<-mcor
+upper[upper.tri(mcor)]<-""
+upper<-as.data.frame(upper,
+                     row.names = c("Age-Adjusted Firearm Homocide", "Gun ownership", "Border Chain Index", "Poverty Rate", "Educational Attainment", "Divorce Rate"),
+                     colnames())
+upper
+```
+
+
+## Results & Analysis
+
+
+  For our initial benchmark model, we will use age-adjusted murder rate as the independent variable, and percentage of households owning guns as the dependent variable. It is worth noting that no correlation exists without using the age-adjusted rate, suggesting demographic shape plays a significant role in crime determination. Our baseline case shows a strong correlation with gun ownership rates and age-adjusted homicide rates, this is displayed in Figure #, and the relationship given by the formula below:
+
+\begin{center}
+    $\widehat{murder} = 4.68847 + 0.212*\mathit{gunrate}$
+    \end{center}
+
+```{r, include=FALSE}
+crimestat3 <- read_excel("crimestat3.xlsx", 
+    col_types = c("text", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "text"))
+```
+ 
+```{r}
+usmodel <- lm(agemurder~gunrate, data=crimestat3)
+
+b1 <- coef(usmodel)[[1]]
+b2 <- coef(usmodel)[[2]]
+plot(crimestat3$gunrate, crimestat3$agemurder, 
+     xlab="Percentage of households owning guns", 
+     ylab="Age-adjusted murder rate", 
+     type = "p")
+abline(b1,b2)
+```
+ 
+
+  From here,the model will be refined by adding further independent variables in order to control for socio-economic factors. The first  additional variable included was the poverty rate, which in itself is a strong predictor of crime. It is worth noting that from here the intercept coefficient ceases to be significant; also that controlling for poverty causes reduction of 0.037 murders per 1% increase in households owning guns. The overall relationship is given by the formula below:
+
+\begin{center}
+$\widehat{murder} = -1.606 + 0.17535*\mathit{gunrate} + 0.50771*\mathit{poverty}$
+\end{center}
+
+```{r}
+usmodel1 <- lm(agemurder~gunrate+poverty, data=crimestat3)
+```
+\
+  The percentage of households owning guns serves to a reasonable degree to capture the degree of gun control measures enacted within a state. However, given the lax nature of interstate border enforcement, the ease circumventing local laws must also be accounted for within the model. This is done via the border chain index variable. The additional of this control presents an interesting finding in of itself; the effect of a 1% higher gun ownership per capita in neighbouring states has only around half the impact on a states homicide rate as a 1% increase of ownership in the state itself. The overall relationship in this model is given below:
+\
+\begin{center}
+$\widehat{murder} = -2.918 + 0.140*\mathit{gunrate} + 0.480*\mathit{poverty} + 0.0772*\mathit{borderchainav}$
+\end{center}
+\
+```{r, figsintext=FALSE}
+usmodel2 <- lm(agemurder~gunrate+poverty+borderchainav, data=crimestat3)
+
+```
+\
+Educational attainment also serves as a strong predictor of overall crime, and captures a number of factors we should wish to control for. As expected, education has a negative overall impact on murder rates, and the inclusion of this control sees the impact of gun ownership decline slightly over the previous model. As usual, the relationship given by this model is given in the formula below:
+
+\begin{center}
+$\widehat{murder} = -2.918 + 0.140*\mathit{gunrate} + 0.480*\mathit{poverty} + 0.0772*\mathit{borderchainav} + -0.250*\mathit{educ}$
+\end{center}
+
+```{r, include = TRUE}
+usmodel3 <- lm(agemurder~gunrate+poverty+borderchainav+educ, data=crimestat3)
+```
+
+  The final control variable used was the per capita divorce rate for each state. This captures a number of key factors should be controlled for, such as the stability of home life during childhood. It is worth noting that within the American political arena, decline in family values is often blamed for gun violence. This is only a half truth, as the overall divorce rate has been steadily dropping for several decades within the United States. However, the final model did find divorce rates to be a strong predictor of homicide rates. 
+
+```{r}
+usmodelfinal <- lm(agemurder~gunrate+poverty+borderchainav+divorce+educ, data=crimestat3)
+```
+
+![Comparison of regression models](C:\Users\Kyle\Documents\399 project\regression.png)
+```{r}
+kable(tidy(bptest(usmodelfinal)), 
+caption="Breusch-Pagan heteroskedasticity test")
+```
+  
+  The final model (as well as the earlier models) has homoskedasticisity, meeting the Gauss-Markov assumption. Short of any unaccounted for variables, the final model gives a robust prediction of the interstate variation in gun violence rates. This is shown in the Breusch-Pagan heteroskedasticity test output above.
+
+# Conclusion
+
+  Overall, this paper finds gun ownership per capita to be a significant factor in explaining the large variation of overall level of homicide between US states. Within the final model, a 1% increase in households owning firearms causes an increase in the per capita homicide rate by 0.09 per 100,000, significant at the 1% level. Along with this, socioeconomic factors of poverty and divorce rate were found to be significant at the 1% level, with educational attainment level being significant at the 10% level. The border chain index was found to be almost significant at the 10% level, with a p-value low enough to not omit the variable from the final model. These results are in line with the majority of existing literature on the subject, and support the initial hypothesis that the level of gun crime increases as guns become more prevalent within an American state.
+  
+  In keeping with this however, it must be noted that this study also highlights that gun violence is a multifacited issue with no singular solution. Using the regression parametres from the final model, if the state with the highest per capita gun violence rate (Louisinia) were to elimate all of its guns, it would still rank within the 10 highest. This implies heavily that much more detailed policy than gun control must be undertaken to address the epidemic of violence within the United States.
+
+
+\newpage
+
+# References
+
+
+\begingroup
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{0.5in}
+
+<div id = "refs"></div>
+\endgroup
+
+\newpage
+
+# Appendix
+
+A.1 Details of Variables Used Within Model
+
+|    Full Name                                          |    Model Name    |    Source                                |    Comments                              |    Link |
+| ----------------------------------------------------- | ---------------- | ---------------------------------------- | ---------------------------------------- | ------- |
+|    Age-Adjusted   Firearm Death Rates                 |    agemurder     | CDC Center for Health Statistics         |    Complete for all   states, 2014       | [1](https://www.cdc.gov/nchs/pressroom/sosmap/firearm.htm)     |
+|    Percentage of   Households Owning Firearms         |    gunrate       |    Gun Ownership &   Social Gun Culture  | Complete for all states, 2013            | [2](http://injuryprevention.bmj.com/content/injuryprev/early/2015/06/09/injuryprev-2015-041586.full.pdf?keytype=ref&ijkey=doj6vx0laFZMsQ2)     |
+|    Poverty Rate by   Household Income                 |    poverty       |    United States   Census Bureau         |    Complete for all   states, 2014       | [3](https://www.census.gov/content/dam/Census/library/publications/2015/demo/p60-252.pdf)     |
+|    Divorces per 1,000                                 |    divorce       |    CDC Center for   Health Statistics    |    Indiana and   Louisiana missing, 2011 | [4](https://www.cdc.gov/nchs/data/dvs/divorce_rates_90_95_99-11.pdf)     |
+|    Percentage of   Residents With Bachelors or Higher |    educ          |    United States   Census Bureau         |    Complete for all   states, 2014       | [5](https://factfinder.census.gov/faces/tableservices/jsf/pages/productview.xhtml?pid=ACS_15_5YR_S1501)     |
+|    Average Gun   Ownership of Neighbouring States     |    borderchainav |    Self Created Index                    |    Null entry for   Hawaii and Alaska    | NA      |
+
+                                                                                                
+Notes/Questions for draft version:                                                                                                
